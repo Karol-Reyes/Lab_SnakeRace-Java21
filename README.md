@@ -70,6 +70,7 @@ co.eci.snake
 
 > Objetivo didáctico: practicar suspensión/continuación **sin** espera activa y consolidar el modelo de monitores en Java.
 
+[Respuesta aquí]
 ---
 
 ## Parte II — SnakeRace concurrente (núcleo del laboratorio)
