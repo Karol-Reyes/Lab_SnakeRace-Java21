@@ -1,3 +1,7 @@
+- Juan David Moreno D'Aleman
+- Karol XImena Rodriguez Reyes
+---
+
 # Snake Race — ARSW Lab #2 (Java 21, Virtual Threads)
 
 **Escuela Colombiana de Ingeniería – Arquitecturas de Software**  
