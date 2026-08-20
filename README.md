@@ -100,11 +100,15 @@ co.eci.snake
   - La **peor serpiente** (la que **primero murió**).
 - Considera que la suspensión **no es instantánea**; coordina para que el estado mostrado no quede “a medias”.
 
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
+
 ### 4) Robustez bajo carga
 
 - Ejecuta con **N alto** (`-Dsnakes=20` o más) y/o aumenta la velocidad.
 - El juego **no debe romperse**: sin `ConcurrentModificationException`, sin lecturas inconsistentes, sin _deadlocks_.
 - Si habilitas **teleports** y **turbo**, verifica que las reglas no introduzcan carreras.
+
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
 
 > Entregables detallados más abajo.
 
