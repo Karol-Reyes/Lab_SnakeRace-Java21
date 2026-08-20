@@ -9,19 +9,22 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class SnakeRunner implements Runnable {
   private final Snake snake;
   private final Board board;
+  private final PauseController pauseController;
   private final int baseSleepMs = 80;
   private final int turboSleepMs = 40;
   private int turboTicks = 0;
 
-  public SnakeRunner(Snake snake, Board board) {
+  public SnakeRunner(Snake snake, Board board, PauseController pauseController) {
     this.snake = snake;
     this.board = board;
+    this.pauseController = pauseController;
   }
 
   @Override
   public void run() {
     try {
       while (!Thread.currentThread().isInterrupted()) {
+        pauseController.awaitIfPaused();
         maybeTurn();
         var res = board.step(snake);
         if (res == Board.MoveResult.HIT_OBSTACLE) {

@@ -1,6 +1,7 @@
 package co.eci.snake.ui.legacy;
 
 import co.eci.snake.concurrency.SnakeRunner;
+import co.eci.snake.concurrency.PauseController;
 import co.eci.snake.core.Board;
 import co.eci.snake.core.Direction;
 import co.eci.snake.core.Position;
@@ -13,14 +14,20 @@ import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 public final class SnakeApp extends JFrame {
 
   private final Board board;
   private final GamePanel gamePanel;
   private final JButton actionButton;
+  private final JButton startButton;
+  private final JLabel statsLabel;
   private final GameClock clock;
+  private final PauseController pauseController;
+  private final ExecutorService executor;
   private final java.util.List<Snake> snakes = new java.util.ArrayList<>();
+  private boolean pauseInProgress;
 
   public SnakeApp() {
     super("The Snake Race");
@@ -35,20 +42,37 @@ public final class SnakeApp extends JFrame {
     }
 
     this.gamePanel = new GamePanel(board, () -> snakes);
-    this.actionButton = new JButton("Action");
+    this.actionButton = new JButton("Pausar");
+    this.actionButton.setEnabled(false);
+    this.startButton = new JButton("Iniciar");
+    this.statsLabel = new JLabel("Juego detenido");
+    this.pauseController = new PauseController(snakes.size());
+    this.executor = Executors.newVirtualThreadPerTaskExecutor();
 
     setLayout(new BorderLayout());
     add(gamePanel, BorderLayout.CENTER);
-    add(actionButton, BorderLayout.SOUTH);
+    JPanel controls = new JPanel(new BorderLayout(8, 0));
+    JPanel buttons = new JPanel();
+    buttons.add(startButton);
+    buttons.add(actionButton);
+    controls.add(buttons, BorderLayout.WEST);
+    controls.add(statsLabel, BorderLayout.CENTER);
+    add(controls, BorderLayout.SOUTH);
 
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    addWindowListener(new java.awt.event.WindowAdapter() {
+      @Override
+      public void windowClosed(java.awt.event.WindowEvent e) {
+        executor.shutdownNow();
+        clock.close();
+      }
+    });
     pack();
     setLocationRelativeTo(null);
 
     this.clock = new GameClock(60, () -> SwingUtilities.invokeLater(gamePanel::repaint));
 
-    var exec = Executors.newVirtualThreadPerTaskExecutor();
-    snakes.forEach(s -> exec.submit(new SnakeRunner(s, board)));
+    startButton.addActionListener(e -> startGame());
 
     actionButton.addActionListener((ActionEvent e) -> togglePause());
 
@@ -125,17 +149,48 @@ public final class SnakeApp extends JFrame {
     }
 
     setVisible(true);
-    clock.start();
   }
 
   private void togglePause() {
-    if ("Action".equals(actionButton.getText())) {
-      actionButton.setText("Resume");
-      clock.pause();
-    } else {
-      actionButton.setText("Action");
-      clock.resume();
-    }
+    if (pauseInProgress) return;
+    if (clock.isPaused()) resumeGame();
+    else pauseGame();
+  }
+
+  private void startGame() {
+    snakes.forEach(s -> executor.submit(new SnakeRunner(s, board, pauseController)));
+    clock.start();
+    startButton.setEnabled(false);
+    actionButton.setEnabled(true);
+    statsLabel.setText("En ejecución");
+  }
+
+  private void pauseGame() {
+    if (!clock.isRunning()) return;
+    pauseInProgress = true;
+    clock.pause();
+    actionButton.setEnabled(false);
+    statsLabel.setText("Pausando...");
+    executor.submit(() -> {
+      boolean pausedSafely = pauseController.pauseAndAwait(2_000);
+      SwingUtilities.invokeLater(() -> {
+        pauseInProgress = false;
+        actionButton.setEnabled(true);
+        gamePanel.capturePausedStatistics();
+        actionButton.setText("Reanudar");
+        statsLabel.setText(pausedSafely
+            ? gamePanel.pausedStatistics()
+            : "Pausa solicitada | " + gamePanel.pausedStatistics());
+        gamePanel.repaint();
+      });
+    });
+  }
+
+  private void resumeGame() {
+    pauseController.resume();
+    clock.resume();
+    actionButton.setText("Pausar");
+    statsLabel.setText("En ejecución");
   }
 
   public static final class GamePanel extends JPanel {
@@ -227,6 +282,40 @@ public final class SnakeApp extends JFrame {
         idx++;
       }
       g2.dispose();
+    }
+
+    private String pausedStats = "";
+
+    public void capturePausedStatistics() {
+      Snake longest = null;
+      Snake shortest = null;
+      int longestIndex = -1;
+      int shortestIndex = -1;
+      int longestLength = -1;
+      int shortestLength = Integer.MAX_VALUE;
+      int index = 0;
+      for (Snake snake : snakesSupplier.get()) {
+        int length = snake.snapshot().size();
+        if (length > longestLength) {
+          longest = snake;
+          longestIndex = index;
+          longestLength = length;
+        }
+        if (length < shortestLength) {
+          shortest = snake;
+          shortestIndex = index;
+          shortestLength = length;
+        }
+        index++;
+      }
+      pausedStats = longest == null
+          ? "Sin serpientes"
+          : "Más larga: serpiente " + (longestIndex + 1) + " (" + longestLength
+              + ") | Peor: serpiente " + (shortestIndex + 1) + " (" + shortestLength + ")";
+    }
+
+    public String pausedStatistics() {
+      return pausedStats;
     }
   }
 

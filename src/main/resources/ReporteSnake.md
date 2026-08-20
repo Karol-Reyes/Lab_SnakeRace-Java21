@@ -58,9 +58,15 @@ Los usos inseguros para este desarrollo identificados fueron:
 
 ### Busy-Wait
 
-Como tal, no se presenta una condicion de bloqueo entre dormir/bloquear, ya que el ```SnakeRunner``` usa el ```Thread-sleep(sleep)``` siempre en las interacciones, así mismo, el ```GameClock``` usa su propio executor, no un loop.
+No se presenta *busy-waiting*. El ```SnakeRunner``` usa ```Thread.sleep(sleep)```
+entre movimientos y el ```GameClock``` usa un executor programado. Para la pausa se
+usa espera bloqueante con ```wait()```, no un ciclo que consuma CPU preguntando
+continuamente por el estado.
 
-Lo unico que puede llegar a presentarse como algo a revisar, es que el ```GameClock``` sigue avanzando y disparando el *tick* incluso cuando se encuentra en estado 'PAUSED', pero no hay cambios en el Runnable porque tiene una condición para no hacer nada. Cosa que como tal no requiere un arreglo con wait/notify
+El reloj puede seguir ejecutando su tarea programada durante ```PAUSED```, pero la
+tarea comprueba el estado antes de solicitar un repintado. Por otro lado, los
+runners quedan bloqueados en ```PauseController.awaitIfPaused()``` hasta recibir
+```notifyAll()``` al reanudar.
 
 
 ---
@@ -104,3 +110,31 @@ Asi que no hay preocupación, ya que se encuentra un orden definido
 evitando totalmente al deadlock
 
 ***(Todos estos cambios ya están reflejados en [Snake.java](../java/co/eci/snake/core/Snake.java))***
+
+---
+
+## 3) Control seguro de ejecución en la UI
+
+Se agregó un flujo explícito de **Iniciar / Pausar / Reanudar** en `SnakeApp`. Los `SnakeRunner` comparten un `PauseController`. 
+
+Al solicitar una pausa, primero semarca el reloj como pausado y luego un hilo virtual auxiliar espera con `wait()` hasta que cada runner haya llegado a un punto seguro y lo haya reconocido. La
+espera no se ejecuta en el hilo de Swing, por lo que la ventana permanece
+responsiva y puede mostrar el estado `Pausando...`.
+
+Solo después de solicitar la pausa se toman copias de los cuerpos y se muestran las estadísticas. Así ningún runner continúa moviéndose después de reconocer la pausa mientras la UI captura el estado.
+
+La barrera tiene un timeout de 2 segundos. Si todos los runners responden, lapausa queda confirmada. Si alguno tarda más, la UI igualmente muestra lasestadísticas con el prefijo `Pausa solicitada`, pero mantiene el controlador enestado pausado para que `Reanudar` pueda liberar los runners. Esto evita que la interfaz quede esperando indefinidamente y conserva un comportamiento usable bajo carga.
+
+La estadística de la serpiente más larga se calcula con el tamaño de cada snapshot. La implementación actual del juego no tiene una transición a estado muerto `HIT_OBSTACLE` únicamente cambia la dirección. Por eso, mientras no se agregue una regla de muerte, la estadística **Peor** identifica la serpiente de menor longitud, que es el indicador disponible y determinista para ese estado.
+
+## 4) Robustez bajo carga
+
+El acceso a las colecciones del tablero continúa encapsulado en métodos `synchronized` que devuelven copias, y cada serpiente protege su cuerpo y dirección con su propio monitor. La pausa se coordina con `wait/notifyAll`, sin espera activa. Los runners usan hilos virtuales, por lo que se puede probar con, por ejemplo:
+
+```
+mvn -q -DskipTests exec:java -Dsnakes=20
+```
+
+![alt text](image.png)
+
+Los teleports y turbo se procesan dentro de la región crítica de `Board.step()`, por eso sus colecciones no se modifican concurrentemente y la velocidad turbo es estado local del runner.
