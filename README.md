@@ -70,7 +70,7 @@ co.eci.snake
 
 > Objetivo didáctico: practicar suspensión/continuación **sin** espera activa y consolidar el modelo de monitores en Java.
 
-[Respuesta aquí](src/main/resources/ParteI.md)
+- *[Respuesta aquí](src/main/resources/ParteI.md)*
 ---
 
 ## Parte II — SnakeRace concurrente (núcleo del laboratorio)
@@ -82,6 +82,8 @@ co.eci.snake
   - Posibles **condiciones de carrera**.
   - **Colecciones** o estructuras **no seguras** en contexto concurrente.
   - Ocurrencias de **espera activa** (busy-wait) o de sincronización innecesaria.
+
+- *[Respuesta aquí](src/main/resources/ReporteSnake.md)*
 
 ### 2) Correcciones mínimas y regiones críticas
 
