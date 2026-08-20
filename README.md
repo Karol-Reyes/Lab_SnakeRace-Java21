@@ -83,7 +83,7 @@ co.eci.snake
   - **Colecciones** o estructuras **no seguras** en contexto concurrente.
   - Ocurrencias de **espera activa** (busy-wait) o de sincronización innecesaria.
 
-- *[Respuesta aquí](src/main/resources/ReporteSnake.md)*
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
 
 ### 2) Correcciones mínimas y regiones críticas
 
@@ -91,6 +91,7 @@ co.eci.snake
 - Protege **solo** las **regiones críticas estrictamente necesarias** (evita bloqueos amplios).
 - Justifica en **`el reporte de laboratorio`** cada cambio: cuál era el riesgo y cómo lo resuelves.
 
+*La respuesta se encuentra justificada en [ReporteSnake.md](src/main/resources/ReporteSnake.md)*
 ### 3) Control de ejecución seguro (UI)
 
 - Implementa la **UI** con **Iniciar / Pausar / Reanudar** (ya existe el botón _Action_ y el reloj `GameClock`).
