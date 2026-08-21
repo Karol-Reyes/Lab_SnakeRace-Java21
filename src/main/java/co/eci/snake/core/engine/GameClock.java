@@ -31,5 +31,9 @@ public final class GameClock implements AutoCloseable {
   public void pause()  { state.set(GameState.PAUSED); }
   public void resume() { state.set(GameState.RUNNING); }
   public void stop()   { state.set(GameState.STOPPED); }
+  public boolean isRunning() { return state.get() == GameState.RUNNING; }
+  public boolean isPaused() { return state.get() == GameState.PAUSED; }
+
+
   @Override public void close() { scheduler.shutdownNow(); }
 }

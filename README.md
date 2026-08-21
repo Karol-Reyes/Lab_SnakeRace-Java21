@@ -1,3 +1,7 @@
+- Juan David Moreno D'Aleman
+- Karol XImena Rodriguez Reyes
+---
+
 # Snake Race — ARSW Lab #2 (Java 21, Virtual Threads)
 
 **Escuela Colombiana de Ingeniería – Arquitecturas de Software**  
@@ -66,6 +70,7 @@ co.eci.snake
 
 > Objetivo didáctico: practicar suspensión/continuación **sin** espera activa y consolidar el modelo de monitores en Java.
 
+- *[Respuesta aquí](src/main/resources/ParteI.md)*
 ---
 
 ## Parte II — SnakeRace concurrente (núcleo del laboratorio)
@@ -78,12 +83,15 @@ co.eci.snake
   - **Colecciones** o estructuras **no seguras** en contexto concurrente.
   - Ocurrencias de **espera activa** (busy-wait) o de sincronización innecesaria.
 
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
+
 ### 2) Correcciones mínimas y regiones críticas
 
 - **Elimina** esperas activas reemplazándolas por **señales** / **estados** o mecanismos de la librería de concurrencia.
 - Protege **solo** las **regiones críticas estrictamente necesarias** (evita bloqueos amplios).
 - Justifica en **`el reporte de laboratorio`** cada cambio: cuál era el riesgo y cómo lo resuelves.
 
+*La respuesta se encuentra justificada en [ReporteSnake.md](src/main/resources/ReporteSnake.md)*
 ### 3) Control de ejecución seguro (UI)
 
 - Implementa la **UI** con **Iniciar / Pausar / Reanudar** (ya existe el botón _Action_ y el reloj `GameClock`).
@@ -92,11 +100,15 @@ co.eci.snake
   - La **peor serpiente** (la que **primero murió**).
 - Considera que la suspensión **no es instantánea**; coordina para que el estado mostrado no quede “a medias”.
 
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
+
 ### 4) Robustez bajo carga
 
 - Ejecuta con **N alto** (`-Dsnakes=20` o más) y/o aumenta la velocidad.
 - El juego **no debe romperse**: sin `ConcurrentModificationException`, sin lecturas inconsistentes, sin _deadlocks_.
 - Si habilitas **teleports** y **turbo**, verifica que las reglas no introduzcan carreras.
+
+*[Respuesta aquí](src/main/resources/ReporteSnake.md)*
 
 > Entregables detallados más abajo.
 
